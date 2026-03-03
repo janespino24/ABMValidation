@@ -1,0 +1,10 @@
+numpy
+pandas
+matplotlib
+pyyaml
+tqdm
+scipy
+seaborn
+networkx
+streamlit
+plotly

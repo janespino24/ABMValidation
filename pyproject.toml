@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vivamacs"
+version = "0.2.0"
+description = "VIVAMACS Cyber Risk Simulation (Notebook Port)"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "scipy",
+]
+
+# Script entry point updated to new layout
+[project.scripts]
+vivamacs = "notebook_refactor.main:main"

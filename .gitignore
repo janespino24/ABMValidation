@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Logs
+*.log
+
+# Draft documents and working files
+*.docx
+*.pdf
+*.pptx
+*.png
+CLAIMS_AUDIT_REPORT.md
+COMPLETE_PAPER_CONTENT_READY_TO_PASTE.md
+COMPLETE_VALIDATION_INTEGRATION_PACKAGE.md
+DISCUSSION_UPDATES_FOR_PAPER.md
+EXTENDED_VALIDATION_SECTION_CORRECTED.md
+EXTENDED_VALIDATION_SECTION_FINAL.md
+EXTENDED_VALIDATION_SECTION_FINAL_v2.md
+FINAL_VALIDATION_SUMMARY.md
+INTERIM_RESULTS.md
+PAPER1_OUTLINE_VALIDATION.md
+PAPER_INTEGRATION_GUIDE.md
+PAPER_V2_TO_V3_COMPREHENSIVE.md
+PAPER_V2_UPDATE_GUIDE.md
+PAPER_V3_DRAFT_SECTIONS.md
+PAPER_V3_TRIMMED_10K.md
+SESSION_CONTEXT.md
+VALIDATION_PROGRESS.md
+VALIDATION_SECTION_FOR_PAPER.md
+
+# Output directories
+outputs/
+outputs_gui/
+outputs_new/
+
+# Scripts not part of core package
+check_progress.py
+monitor_validation.sh
+watch_progress.sh
+rerun_all_validation_high.py
+run_sim_helper.py
+
+# OS
+.DS_Store
+Thumbs.db

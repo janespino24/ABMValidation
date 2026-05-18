@@ -1,6 +1,6 @@
 # VIVAMACS Offline Project Status
 
-**Last updated:** 2026-05-18 10:20 Asia/Manila  
+**Last updated:** 2026-05-18 10:30 Asia/Manila  
 **Project path:** `/fast/users/kobe/Projects/VIVAMACS`  
 **Repo remote:** `https://github.com/janespino24/ABMValidation.git`  
 **Active workstream:** Paper 1, SIMPAT submission, methodology-only validation paper  
@@ -122,6 +122,8 @@ cd /fast/users/kobe/Projects/VIVAMACS
 git push origin main
 ```
 
+Completed: user pushed local preregistration/status/candidate commits to GitHub on 2026-05-18. Remote advanced from `ba63b4e` to `659d0b8`; `git status -sb` now reports `main...origin/main` with no ahead commits.
+
 ---
 
 ## Current Git State Before This Tracker
@@ -159,28 +161,50 @@ Known untracked files/directories:
 
 ---
 
+## Smoke Test Record
+
+Tiny post-push smoke tests were run after the preregistration and candidate-config commits were pushed. These were loading/output-shape checks only, not experimental analysis.
+
+Command shape:
+
+```bash
+.venv/bin/python - <<'PY'
+from pathlib import Path
+from src.notebook_refactor.environment import load_data, setup_environment
+from src.notebook_refactor.simulation import run_iteration
+...
+PY
+```
+
+Results, one 1-day iteration per candidate:
+
+| Candidate | Rows | Sigma | Device types | Data loss | Repair | Event summary |
+|---|---:|---:|---|---:|---:|---|
+| A | 36 | 13.333333333333334 | Firewall, Internet, Mobile, PC, Server | 21469333.333333313 | 4712000.0 | spam_mob=1, spam_pc=0, hack_fw=9, hack_server=57, hack_net=0 |
+| B1 | 36 | 13.333333333333334 | Firewall, Internet, Mobile, PC, Server | 6219886.262499985 | 4269000.0 | spam_mob=2, spam_pc=1, hack_fw=9, hack_server=53, hack_net=0 |
+| B3 | 36 | 13.333333333333334 | Firewall, Internet, Mobile, PC, Server | 6862840.797499984 | 1433928.7800000014 | spam_mob=2, spam_pc=4, hack_fw=12, hack_server=56, hack_net=0 |
+
+Interpretation: all canonical candidate configs load successfully and produce valid nonzero data-loss/repair outputs. These results are stochastic smoke-test values and should not be used as paper results.
+
+---
+
 ## Immediate Next Steps
 
-1. Push local commits to remote from an authenticated GitHub terminal:
-
-   ```bash
-   cd /fast/users/kobe/Projects/VIVAMACS
-   git push origin main
-   ```
-
-2. Verify the candidate data/config files:
+1. Verify the candidate data/config files:
 
    - Candidate A exact file path/name.
    - Candidate B1 exact file path/name or generation script.
    - Candidate B3 exact file path/name or generation script.
 
-3. Run smoke tests only after preregistration is pushed:
+2. Run smoke tests only after preregistration is pushed:
 
    - Load each candidate.
    - Run one short simulation seed or tiny Monte Carlo run.
    - Confirm outputs include data loss and repair cost.
 
-4. Prepare/verify the Sobol pipeline:
+   Completed on 2026-05-18.
+
+3. Prepare/verify the Sobol pipeline:
 
    - N = 1024 base samples.
    - k = 3 parameters: `patch`, `AV`, `awareness`.
@@ -188,7 +212,7 @@ Known untracked files/directories:
    - 200 Monte Carlo iterations per evaluation.
    - Three candidates A, B1, B3.
 
-5. Launch long-running experiments only after smoke tests pass.
+4. Launch long-running experiments only after smoke tests pass and the Sobol runner is reviewed.
 
 ---
 
@@ -235,5 +259,5 @@ When resuming:
 - Do not add Paper 2 substantive control-prioritization claims into Paper 1 except as future application.
 - Do not tune preregistration thresholds after seeing results.
 - If predictions fail, report them honestly as framework boundary evidence.
-- Do not run experiments until the preregistration commits are pushed or the user explicitly accepts local-only timestamping.
+- Do not run full experiments until the Sobol runner is reviewed against the preregistration.
 - Do not deploy, touch Vercel/GCP, or modify the SaaS project during this offline-paper workstream.

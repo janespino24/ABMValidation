@@ -141,8 +141,8 @@ In the event of any failure mode, the result is reported as filed and discussed 
 This document is committed to the project repository at the following location prior to execution of the Sobol runs for Candidates B1 and B3:
 
 - File: `docs/preregistrations/synthetic_ground_truth_2026-05-18.md`
-- Commit hash: [to be filled in after commit]
-- Commit date: [to be filled in after commit]
+- Commit hash: `dda10857409d075f6539de63341cff268d16f225`
+- Commit date: `2026-05-18 10:01:00 +0800`
 
 The commit timestamp is the canonical evidence that predictions were specified ex-ante. Any modifications to this document after the commit are tracked via git history and disclosed in the manuscript.
 

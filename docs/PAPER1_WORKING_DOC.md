@@ -114,7 +114,7 @@ Sobol varies three parameters globally over [0, 100]: `patch`, `AV`, `awareness`
 ### 4.3 Candidate models
 
 - **Candidate A (truth):** Data5_typical.csv as supplied.
-- **Candidate B1 (uniform data value):** identical to A except `Data_Value` replaced by its mean across cost-carrying devices (~$102,400). Network topology, controls, threat parameters, repair values all unchanged. Tests whether the framework correctly identifies the *absence* of asset-value concentration.
+- **Candidate B1 (uniform data value):** identical to A except `Data_Value` replaced by its mean across devices with nonzero `Data_Value` ($167,727.27 in the verified Data5 configuration). Network topology, controls, threat parameters, repair values all unchanged. Tests whether the framework correctly identifies the *absence* of asset-value concentration.
 - **Candidate B3 (uniform both):** B1 plus `Repair_Value` replaced by its mean. Strongest contrast.
 
 Candidate B2 (uniform repair only) was considered and excluded — tests a less mechanism-relevant alternative.

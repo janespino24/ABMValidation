@@ -38,7 +38,7 @@ Critically, `awareness` is structurally locked out of affecting servers, firewal
 ## 3. Candidate models
 
 - **Candidate A (truth):** the model configured with `Data5_typical.csv` as supplied.
-- **Candidate B1 (uniform data value):** identical to Candidate A in every respect except that `Data_Value` is replaced with its mean across all asset classes (≈ $102,400) for every device that currently has a nonzero `Data_Value`. Network topology, control levels, repair values, threat parameters, and all other configuration remain unchanged. This represents the implicit assumption — common in unweighted control frameworks — that all assets carry equivalent data exposure.
+- **Candidate B1 (uniform data value):** identical to Candidate A in every respect except that `Data_Value` is replaced with its mean across every device that currently has a nonzero `Data_Value` ($167,727.27 in the verified Data5 configuration). Network topology, control levels, repair values, threat parameters, and all other configuration remain unchanged. This represents the implicit assumption — common in unweighted control frameworks — that all assets carry equivalent data exposure.
 - **Candidate B3 (uniform both):** identical to B1 with the additional change that `Repair_Value` is replaced with its mean across all classes that incur repair cost. This represents complete decoupling of cost outcomes from asset-class structure.
 
 Candidate B2 (uniform repair only) was considered and excluded; it tests a less mechanism-relevant alternative.
@@ -145,6 +145,8 @@ This document is committed to the project repository at the following location p
 - Commit date: `2026-05-18 10:01:00 +0800`
 
 The commit timestamp is the canonical evidence that predictions were specified ex-ante. Any modifications to this document after the commit are tracked via git history and disclosed in the manuscript.
+
+Pre-experiment clarification: before any Candidate A/B1/B3 Sobol or smoke-test results were generated, the Data5 configuration file was inspected and the B1 parenthetical mean was corrected from the planning estimate to the verified value above. The operational candidate definition remains unchanged: uniform replacement across devices with nonzero `Data_Value`.
 
 ---
 

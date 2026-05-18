@@ -1,6 +1,6 @@
 # VIVAMACS Offline Project Status
 
-**Last updated:** 2026-05-18 10:01 Asia/Manila  
+**Last updated:** 2026-05-18 10:20 Asia/Manila  
 **Project path:** `/fast/users/kobe/Projects/VIVAMACS`  
 **Repo remote:** `https://github.com/janespino24/ABMValidation.git`  
 **Active workstream:** Paper 1, SIMPAT submission, methodology-only validation paper  
@@ -63,6 +63,19 @@ Candidate models:
 - **B1:** uniform `Data_Value`, otherwise identical to A.
 - **B3:** uniform `Data_Value` plus uniform `Repair_Value`.
 - B2, uniform repair only, was considered and intentionally excluded.
+
+Canonical candidate config files created after preregistration and before any experiment execution:
+
+- `data/Data5_typical.csv` — Candidate A, exact copy of verified Data5 truth process.
+- `data/Data5_B1_uniform_data_value.csv` — Candidate B1, `Data_Value` replaced for devices with nonzero `Data_Value`.
+- `data/Data5_B3_uniform_data_and_repair_value.csv` — Candidate B3, B1 plus `Repair_Value` replaced for devices with nonzero `Repair_Value`.
+
+Verified replacement means from `data/Data5 (typical) - 20 server.csv`:
+
+- `Data_Value` mean across nonzero `Data_Value` devices: `167727.27272727274`.
+- `Repair_Value` mean across nonzero `Repair_Value` devices: `19642.85714285714`.
+
+Pre-experiment correction made on 2026-05-18: the preregistration and working doc previously contained a planning estimate of approximately `$102,400` for the B1 mean. The operational definition was unchanged, but the parenthetical value was corrected to `$167,727.27` after inspecting the actual Data5 file and before running experiments.
 
 Pre-registered predictions:
 
@@ -224,4 +237,3 @@ When resuming:
 - If predictions fail, report them honestly as framework boundary evidence.
 - Do not run experiments until the preregistration commits are pushed or the user explicitly accepts local-only timestamping.
 - Do not deploy, touch Vercel/GCP, or modify the SaaS project during this offline-paper workstream.
-

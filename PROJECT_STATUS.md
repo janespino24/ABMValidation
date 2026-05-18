@@ -1,6 +1,6 @@
 # VIVAMACS Offline Project Status
 
-**Last updated:** 2026-05-18 10:30 Asia/Manila  
+**Last updated:** 2026-05-18 10:45 Asia/Manila  
 **Project path:** `/fast/users/kobe/Projects/VIVAMACS`  
 **Repo remote:** `https://github.com/janespino24/ABMValidation.git`  
 **Active workstream:** Paper 1, SIMPAT submission, methodology-only validation paper  
@@ -188,6 +188,54 @@ Interpretation: all canonical candidate configs load successfully and produce va
 
 ---
 
+## Synthetic Ground Truth Runner
+
+Added `scripts/synthetic_ground_truth_runner.py` to run the preregistered experiment without modifying the core VIVAMACS model code.
+
+Runner scope:
+
+- Uses canonical candidates A/B1/B3.
+- Uses the preregistered 3-parameter Sobol problem: `patch`, `AV`, `awareness`, each over `[0, 100]`.
+- Uses Saltelli sampling with `calc_second_order=True`, matching the preregistered `(2k + 2) * N = 8192` evaluations per candidate when `N = 1024`.
+- Produces separate Sobol outputs for `data_loss` and `repair_cost`.
+- Uses SALib bootstrap resampling through `sobol.analyze(..., num_resamples=1000)` by default.
+- Provides a traced Candidate A cost-share routine for data-loss share, repair share, compromise-event share, compromise-period share, and a within/across VLAN co-compromise ratio.
+- Includes `--mode smoke`, `--mode sobol`, `--mode cost-share`, and `--mode all`.
+
+Verification completed:
+
+```bash
+.venv/bin/python -m py_compile scripts/synthetic_ground_truth_runner.py
+.venv/bin/python scripts/synthetic_ground_truth_runner.py --mode smoke --candidate all --seed 20260518
+.venv/bin/python scripts/synthetic_ground_truth_runner.py --mode cost-share --cost-share-runs 1 --days 1 --workers 1 --seed 20260518 --output-dir outputs/synthetic_ground_truth_smoke
+```
+
+The cost-share smoke check generated uncommitted smoke-only outputs:
+
+- `outputs/synthetic_ground_truth_smoke/cost_share/candidate_A_cost_share_iterations.csv`
+- `outputs/synthetic_ground_truth_smoke/cost_share/candidate_A_cost_share_summary.csv`
+
+These smoke outputs are not paper results.
+
+Full preregistered run command shape, after final review:
+
+```bash
+.venv/bin/python scripts/synthetic_ground_truth_runner.py \
+  --mode all \
+  --candidate all \
+  --n-base 1024 \
+  --runs-per-sample 200 \
+  --cost-share-runs 1000 \
+  --days 365 \
+  --workers 24 \
+  --seed 20260518 \
+  --output-dir outputs/synthetic_ground_truth
+```
+
+Important runtime implication: this is a very large run: three candidates x 8192 Sobol evaluations x 200 MC iterations, plus cost-share runs. Consider a smaller dry run before the full launch.
+
+---
+
 ## Immediate Next Steps
 
 1. Verify the candidate data/config files:
@@ -204,15 +252,13 @@ Interpretation: all canonical candidate configs load successfully and produce va
 
    Completed on 2026-05-18.
 
-3. Prepare/verify the Sobol pipeline:
+3. Review the new Sobol/cost-share runner against the preregistration:
 
-   - N = 1024 base samples.
-   - k = 3 parameters: `patch`, `AV`, `awareness`.
-   - 8,192 model evaluations per candidate.
-   - 200 Monte Carlo iterations per evaluation.
-   - Three candidates A, B1, B3.
+   - Confirm whether `calc_second_order=True` should remain, because it matches the preregistered 8192 evaluations at N=1024.
+   - Confirm whether cost-share P8's within/across VLAN co-compromise ratio is acceptable as the operational definition of lateral clustering.
+   - Confirm whether cost-share runs should be 1000 or tied to another manuscript value.
 
-4. Launch long-running experiments only after smoke tests pass and the Sobol runner is reviewed.
+4. Launch a small dry run of Sobol after review, then the long-running experiment.
 
 ---
 

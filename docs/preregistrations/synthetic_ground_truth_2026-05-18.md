@@ -153,6 +153,7 @@ The commit timestamp is the canonical evidence that predictions were specified e
 Pre-experiment clarification: before any Candidate A/B1/B3 Sobol or smoke-test results were generated, the Data5 configuration file was inspected and the B1 parenthetical mean was corrected from the planning estimate to the verified value above. The operational candidate definition remains unchanged: uniform replacement across devices with nonzero `Data_Value`.
 
 Pre-run implementation clarification added on 2026-05-22: before full experimental execution, the runner's Saltelli sample count, realized-cost-share iteration count, and P8 within/across-VLAN co-compromise operationalization were recorded here to remove ambiguity between the pre-registered threshold and executable analysis code.
+Post-dry-run decision recorded on 2026-05-22: medium diagnostic dry runs indicated that P6 and P8 may fail under the current Data5 truth process and operational definitions. The thresholds and expected patterns are not revised. The full experiment will be run and reported as preregistered; any P6/P8 failures will be disclosed as null-control diagnostic findings rather than corrected post hoc.
 
 ---
 

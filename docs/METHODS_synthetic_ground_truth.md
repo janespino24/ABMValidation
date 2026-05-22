@@ -127,6 +127,8 @@ Table X.4 reports the comparison of pre-registered predictions against observed 
 
 *[Subsection to be completed after experimental runs. Suggested structure:]*
 
+Pre-run diagnostic note: dry-run diagnostics conducted after preregistration, but before the full experiment, suggested that P6 and P8 may fail under the current Data5 truth process and operational definitions. We therefore retain P6 and P8 exactly as preregistered and report them transparently as null-control diagnostics. A failure of P6 or P8 in the full experiment is interpreted as evidence about the specificity of those null-control expectations, not as a reason to revise the thresholds post hoc.
+
 - **Headline finding:** state whether the framework discriminated correctly between truth and weakened candidates. Frame as "the framework reproduces the pre-registered pattern of passes and fails across [N] of 8 predictions" rather than as a binary verdict.
 - **Mechanism recovery:** discuss specifically whether P4 (differential awareness sensitivity) held, since this is the strongest single piece of evidence for mechanism-level recovery rather than headline-magnitude recovery.
 - **Null-control behaviour:** confirm that P6 and P8 produced similar values across candidates, or discuss any spurious differences as a limitation of pattern detector specificity.

@@ -289,7 +289,9 @@ Important runtime implication: this is a very large run: three candidates x 8192
    - Candidate A cost-share medium dry run completed with 25 iterations at 7 days and wrote expected outputs under `outputs/synthetic_ground_truth_medium_dryrun/cost_share/`.
    - Candidate A 365-day horizon check completed with 25 cost-share iterations under `outputs/synthetic_ground_truth_costshare_horizon_check/cost_share/`. P5-style server data-loss concentration appears strong (`data_share_Server` mean about 0.9986), but P6 and P8 are flagged: `compromise_event_share_Server` mean about 0.783 and `lateral_clustering_ratio` mean about 0.791. These are dry-run diagnostics, not paper results, but they indicate the preregistered P6/P8 null-control expectations may be misspecified.
 
-7. Next action: do not launch the full preregistered experiment until deciding how to handle the P6/P8 diagnostic warning. The cleanest options are to run the full experiment and report P6/P8 failures transparently, or preserve P1-P5 as primary discrimination tests and treat P6/P8 as exploratory/diagnostic controls in the manuscript discussion.
+7. Decision made on 2026-05-22: use Option 1. Keep P6 and P8 exactly as preregistered, do not revise thresholds, and run the full experiment as filed. If P6/P8 fail in the full run, report those failures transparently as null-control diagnostic findings and discuss what they reveal about the Data5 truth process and/or the operational definitions. The primary asset-value concentration claim remains anchored in the preregistered P1-P5 tests, but P6/P8 remain part of the reported preregistered result set.
+
+8. Next action: after pushing this tracker/doc decision commit, prepare for the full preregistered run or, if desired, first run one more timing benchmark to estimate full runtime.
 
 ---
 

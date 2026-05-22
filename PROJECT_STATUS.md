@@ -313,7 +313,15 @@ Important runtime implication: this is a very large run: three candidates x 8192
    - To monitor: `tmux attach -t vivamacs_full_run` or `tail -f logs/synthetic_ground_truth_full_run.log`.
    - If interrupted: rerun the same command without `--no-resume`; completed Sobol parameter sets and cost-share iterations will be skipped from checkpoints.
 
-11. Next action: monitor Candidate A progress and periodically verify checkpoint growth under `outputs/synthetic_ground_truth/sobol/A/sobol_checkpoint.csv`.
+11. Telegram hourly monitoring helper added on 2026-05-22:
+
+   - Script: `scripts/telegram_run_monitor.py`
+   - Reads Telegram credentials from `.env/telegram_monitor.env` or environment variables `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`.
+   - Status source: `outputs/synthetic_ground_truth/` checkpoints plus `logs/synthetic_ground_truth_full_run.log`.
+   - Dry-run verification completed with `.venv/bin/python scripts/telegram_run_monitor.py --once --dry-run`; it correctly detected tmux session `vivamacs_full_run` as running.
+   - To start hourly notifications after credentials are configured: `tmux new-session -d -s vivamacs_telegram_monitor -c /fast/users/kobe/Projects/VIVAMACS ".venv/bin/python scripts/telegram_run_monitor.py >> logs/telegram_run_monitor.log 2>&1"`.
+
+12. Next action: configure Telegram credentials in `.env/telegram_monitor.env`, send a one-time test message, then start the detached hourly monitor.
 
 ---
 

@@ -267,7 +267,7 @@ Important runtime implication: this is a very large run: three candidates x 8192
    git push origin main
    ```
 
-5. After push, run a small Sobol dry run before the full preregistered experiment:
+5. Small Sobol dry run completed on 2026-05-22 after pushing through commit `d813151`:
 
    ```bash
    .venv/bin/python scripts/synthetic_ground_truth_runner.py \
@@ -280,6 +280,10 @@ Important runtime implication: this is a very large run: three candidates x 8192
      --bootstrap-resamples 10 \
      --output-dir outputs/synthetic_ground_truth_dryrun
    ```
+
+   Result: completed 64 Candidate A Sobol dry-run evaluations and wrote metadata, parameter samples, raw outputs, and Sobol CSV files under `outputs/synthetic_ground_truth_dryrun/sobol/A/`. These are pipeline-check artifacts only and are not paper results. SALib emitted a deprecation warning for `salib.sample.saltelli`; this does not affect the dry run, but the runner should eventually migrate to `salib.sample.sobol`.
+
+6. Next action: run a medium dry run across all candidates, then decide whether to launch the full preregistered experiment.
 
 ---
 

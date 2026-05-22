@@ -9,6 +9,7 @@ existing model code without changing core model behavior.
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import math
 import os
@@ -65,6 +66,9 @@ class EvaluationResult:
     repair_cost: float
 
 
+SOBOL_CHECKPOINT_COLUMNS = ["index", "data_loss", "repair_cost"]
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -87,6 +91,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--bootstrap-resamples", type=int, default=1000)
     parser.add_argument("--seed", type=int, default=20260518)
     parser.add_argument("--output-dir", default="outputs/synthetic_ground_truth")
+    parser.add_argument(
+        "--no-resume",
+        action="store_true",
+        help="Ignore existing checkpoints and recompute outputs in the selected output directory.",
+    )
     return parser.parse_args()
 
 
@@ -94,6 +103,120 @@ def selected_candidates(candidate: str) -> dict[str, Path]:
     if candidate == "all":
         return CANDIDATES
     return {candidate: CANDIDATES[candidate]}
+
+
+def write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.write_text(json.dumps(payload, indent=2) + "\n")
+
+
+def validate_resume_metadata(
+    metadata_path: Path,
+    expected_metadata: dict[str, Any],
+    keys: list[str],
+) -> None:
+    if not metadata_path.exists():
+        raise RuntimeError(f"Checkpoint exists but metadata is missing: {metadata_path}")
+
+    existing = json.loads(metadata_path.read_text())
+    mismatches = [key for key in keys if existing.get(key) != expected_metadata.get(key)]
+    if mismatches:
+        details = ", ".join(
+            f"{key}: existing={existing.get(key)!r}, requested={expected_metadata.get(key)!r}"
+            for key in mismatches
+        )
+        raise RuntimeError(
+            "Existing checkpoint metadata does not match this run. "
+            f"Use a new --output-dir or --no-resume. Mismatches: {details}"
+        )
+
+
+def load_sobol_checkpoint(path: Path, expected_count: int) -> dict[int, EvaluationResult]:
+    if not path.exists():
+        return {}
+
+    df = pd.read_csv(path)
+    if df.empty:
+        return {}
+    missing_columns = set(SOBOL_CHECKPOINT_COLUMNS) - set(df.columns)
+    if missing_columns:
+        raise RuntimeError(f"Invalid Sobol checkpoint {path}; missing columns: {sorted(missing_columns)}")
+
+    df = df.dropna(subset=SOBOL_CHECKPOINT_COLUMNS).copy()
+    df["index"] = df["index"].astype(int)
+    invalid = df[(df["index"] < 0) | (df["index"] >= expected_count)]
+    if not invalid.empty:
+        raise RuntimeError(f"Invalid Sobol checkpoint {path}; index out of range")
+
+    df = df.drop_duplicates(subset=["index"], keep="last")
+    return {
+        int(row.index): EvaluationResult(
+            index=int(row.index),
+            data_loss=float(row.data_loss),
+            repair_cost=float(row.repair_cost),
+        )
+        for row in df.itertuples(index=False)
+    }
+
+
+def append_sobol_checkpoint(path: Path, result: EvaluationResult) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    write_header = not path.exists() or path.stat().st_size == 0
+    with path.open("a", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=SOBOL_CHECKPOINT_COLUMNS)
+        if write_header:
+            writer.writeheader()
+        writer.writerow(
+            {
+                "index": result.index,
+                "data_loss": result.data_loss,
+                "repair_cost": result.repair_cost,
+            }
+        )
+        handle.flush()
+        os.fsync(handle.fileno())
+
+
+def write_sobol_outputs(
+    candidate_dir: Path,
+    data_loss_y: np.ndarray,
+    repair_y: np.ndarray,
+) -> None:
+    np.save(candidate_dir / "Y_data_loss.npy", data_loss_y)
+    np.save(candidate_dir / "Y_repair_cost.npy", repair_y)
+    pd.DataFrame(
+        {
+            "data_loss": data_loss_y,
+            "repair_cost": repair_y,
+        }
+    ).to_csv(candidate_dir / "model_outputs.csv", index=False)
+
+
+def load_cost_share_checkpoint(path: Path) -> pd.DataFrame:
+    if not path.exists():
+        return pd.DataFrame()
+    df = pd.read_csv(path)
+    if df.empty:
+        return df
+    if "iteration" not in df.columns:
+        raise RuntimeError(f"Invalid cost-share checkpoint {path}; missing iteration column")
+    return df.drop_duplicates(subset=["iteration"], keep="last").sort_values("iteration")
+
+
+def append_cost_share_checkpoint(path: Path, row: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists() and path.stat().st_size > 0:
+        with path.open(newline="") as existing:
+            fieldnames = next(csv.reader(existing))
+    else:
+        fieldnames = list(row.keys())
+
+    with path.open("a", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
+        if path.stat().st_size == 0:
+            writer.writeheader()
+        writer.writerow(row)
+        handle.flush()
+        os.fsync(handle.fileno())
 
 
 def apply_global_parameters(df: pd.DataFrame, params: np.ndarray) -> pd.DataFrame:
@@ -167,52 +290,83 @@ def run_sobol_for_candidate(
         "bootstrap_resamples": args.bootstrap_resamples,
         "calc_second_order": True,
     }
-    (candidate_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
+
+    metadata_path = candidate_dir / "metadata.json"
+    checkpoint_path = candidate_dir / "sobol_checkpoint.csv"
+    if args.no_resume and checkpoint_path.exists():
+        checkpoint_path.unlink()
+    elif checkpoint_path.exists():
+        validate_resume_metadata(
+            metadata_path,
+            metadata,
+            [
+                "candidate",
+                "candidate_path",
+                "n_base",
+                "sample_count",
+                "runs_per_sample",
+                "days",
+                "seed",
+                "calc_second_order",
+            ],
+        )
+
+    write_json(metadata_path, metadata)
     np.save(candidate_dir / "saltelli_params.npy", param_values)
 
-    data_loss_y = np.zeros(len(param_values))
-    repair_y = np.zeros(len(param_values))
+    data_loss_y = np.full(len(param_values), np.nan)
+    repair_y = np.full(len(param_values), np.nan)
+    checkpoint = load_sobol_checkpoint(checkpoint_path, len(param_values))
+    for index, result in checkpoint.items():
+        data_loss_y[index] = result.data_loss
+        repair_y[index] = result.repair_cost
+
+    completed_indices = set(checkpoint)
+    pending_indices = [index for index in range(len(param_values)) if index not in completed_indices]
+    print(f"Resume state: {len(completed_indices)}/{len(param_values)} completed; {len(pending_indices)} pending")
+
     start = time.time()
-
-    with ProcessPoolExecutor(max_workers=args.workers) as executor:
-        futures = [
-            executor.submit(
-                evaluate_parameter_set,
-                str(candidate_path),
-                params,
-                args.runs_per_sample,
-                args.days,
-                args.seed,
-                index,
-            )
-            for index, params in enumerate(param_values)
-        ]
-
-        completed = 0
-        for future in as_completed(futures):
-            result = future.result()
-            data_loss_y[result.index] = result.data_loss
-            repair_y[result.index] = result.repair_cost
-            completed += 1
-            if completed == 1 or completed % 25 == 0 or completed == len(param_values):
-                elapsed = max(time.time() - start, 1e-9)
-                rate = completed / elapsed
-                remaining = (len(param_values) - completed) / rate
-                print(
-                    f"{label}: {completed}/{len(param_values)} "
-                    f"({completed / len(param_values):.1%}); ETA {remaining / 60:.1f} min",
-                    flush=True,
+    if pending_indices:
+        with ProcessPoolExecutor(max_workers=args.workers) as executor:
+            futures = [
+                executor.submit(
+                    evaluate_parameter_set,
+                    str(candidate_path),
+                    param_values[index],
+                    args.runs_per_sample,
+                    args.days,
+                    args.seed,
+                    index,
                 )
+                for index in pending_indices
+            ]
 
-    np.save(candidate_dir / "Y_data_loss.npy", data_loss_y)
-    np.save(candidate_dir / "Y_repair_cost.npy", repair_y)
-    pd.DataFrame(
-        {
-            "data_loss": data_loss_y,
-            "repair_cost": repair_y,
-        }
-    ).to_csv(candidate_dir / "model_outputs.csv", index=False)
+            completed_total = len(completed_indices)
+            completed_this_run = 0
+            for future in as_completed(futures):
+                result = future.result()
+                data_loss_y[result.index] = result.data_loss
+                repair_y[result.index] = result.repair_cost
+                append_sobol_checkpoint(checkpoint_path, result)
+                completed_total += 1
+                completed_this_run += 1
+                if completed_this_run == 1 or completed_this_run % 25 == 0 or completed_total == len(param_values):
+                    elapsed = max(time.time() - start, 1e-9)
+                    rate = completed_this_run / elapsed
+                    remaining = (len(param_values) - completed_total) / rate if rate > 0 else math.inf
+                    print(
+                        f"{label}: {completed_total}/{len(param_values)} "
+                        f"({completed_total / len(param_values):.1%}); ETA {remaining / 60:.1f} min",
+                        flush=True,
+                    )
+    else:
+        print(f"{label}: checkpoint already complete; regenerating final outputs", flush=True)
 
+    if np.isnan(data_loss_y).any() or np.isnan(repair_y).any():
+        missing = np.where(np.isnan(data_loss_y) | np.isnan(repair_y))[0].tolist()
+        raise RuntimeError(f"Cannot analyze incomplete Sobol run; missing indices: {missing[:10]}")
+
+    write_sobol_outputs(candidate_dir, data_loss_y, repair_y)
     analyze_and_save_sobol(candidate_dir, "data_loss", data_loss_y, args)
     analyze_and_save_sobol(candidate_dir, "repair_cost", repair_y, args)
 
@@ -440,18 +594,50 @@ def run_cost_share(candidate_path: Path, args: argparse.Namespace, output_root: 
     print(f"Config: {candidate_path}")
     print(f"runs={args.cost_share_runs}; days={args.days}; workers={args.workers}")
 
-    rows: list[dict[str, Any]] = []
-    with ProcessPoolExecutor(max_workers=args.workers) as executor:
-        futures = [
-            executor.submit(traced_iteration, idx, str(candidate_path), args.days, args.seed)
-            for idx in range(args.cost_share_runs)
-        ]
-        for completed, future in enumerate(as_completed(futures), start=1):
-            rows.append(flatten_trace_result(future.result()))
-            if completed == 1 or completed % 25 == 0 or completed == len(futures):
-                print(f"cost-share: {completed}/{len(futures)}", flush=True)
+    checkpoint_path = output_root / "candidate_A_cost_share_checkpoint.csv"
+    metadata_path = output_root / "candidate_A_cost_share_metadata.json"
+    metadata = {
+        "candidate": "A",
+        "candidate_path": str(candidate_path.relative_to(PROJECT_ROOT)),
+        "cost_share_runs": args.cost_share_runs,
+        "days": args.days,
+        "seed": args.seed,
+    }
+    if args.no_resume and checkpoint_path.exists():
+        checkpoint_path.unlink()
+    elif checkpoint_path.exists():
+        validate_resume_metadata(
+            metadata_path,
+            metadata,
+            ["candidate", "candidate_path", "cost_share_runs", "days", "seed"],
+        )
+    write_json(metadata_path, metadata)
 
-    df = pd.DataFrame(rows).sort_values("iteration")
+    existing = load_cost_share_checkpoint(checkpoint_path)
+    completed_iterations = set(existing["iteration"].astype(int)) if not existing.empty else set()
+    pending_iterations = [idx for idx in range(args.cost_share_runs) if idx not in completed_iterations]
+    print(f"Resume state: {len(completed_iterations)}/{args.cost_share_runs} completed; {len(pending_iterations)} pending")
+
+    if pending_iterations:
+        with ProcessPoolExecutor(max_workers=args.workers) as executor:
+            futures = [
+                executor.submit(traced_iteration, idx, str(candidate_path), args.days, args.seed)
+                for idx in pending_iterations
+            ]
+            completed_total = len(completed_iterations)
+            for completed_this_run, future in enumerate(as_completed(futures), start=1):
+                row = flatten_trace_result(future.result())
+                append_cost_share_checkpoint(checkpoint_path, row)
+                completed_total += 1
+                if completed_this_run == 1 or completed_this_run % 25 == 0 or completed_total == args.cost_share_runs:
+                    print(f"cost-share: {completed_total}/{args.cost_share_runs}", flush=True)
+    else:
+        print("cost-share: checkpoint already complete; regenerating final outputs", flush=True)
+
+    df = load_cost_share_checkpoint(checkpoint_path)
+    if len(df) < args.cost_share_runs:
+        raise RuntimeError(f"Cannot summarize incomplete cost-share run: {len(df)}/{args.cost_share_runs}")
+
     df.to_csv(output_root / "candidate_A_cost_share_iterations.csv", index=False)
     summary = summarize_cost_share(df)
     summary.to_csv(output_root / "candidate_A_cost_share_summary.csv", index=False)

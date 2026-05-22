@@ -297,7 +297,14 @@ Important runtime implication: this is a very large run: three candidates x 8192
    - Candidate A Sobol benchmark, same settings with `workers=24`, completed under `outputs/synthetic_ground_truth_timing_benchmark_24w/`. Measured wall time was `real 119.79` seconds, `user 2472.48`, `sys 0.36`.
    - Full preregistered Sobol scale is 3 candidates x 8192 parameter sets x 200 MC iterations = 4,915,200 full-horizon MC iterations. Linear scaling from the 24-worker benchmark suggests roughly 18-21 days of local wall-clock runtime.
 
-9. Next action: before launching the full experiment, add checkpoint/resume support or run candidates/chunks under a job supervisor. A single non-checkpointed 2-3 week local process is too fragile.
+9. Checkpoint/resume support added on 2026-05-22:
+
+   - Sobol runs now write `sobol_checkpoint.csv` under each candidate output directory after each completed parameter set. Rerunning the same command validates metadata, reloads completed indices, skips finished samples, and regenerates final `Y_*.npy`, `model_outputs.csv`, and Sobol CSV files once complete.
+   - Cost-share runs now write `candidate_A_cost_share_checkpoint.csv` plus cost-share metadata, validate resume settings, skip completed iterations on rerun, and regenerate final iteration and summary CSVs from the checkpoint.
+   - Added `--no-resume` to intentionally ignore existing checkpoints and recompute in the selected output directory.
+   - Verification completed: `py_compile`; tiny Sobol checkpoint creation; complete Sobol resume; partial Sobol resume after trimming checkpoint to 5/16 rows; tiny cost-share checkpoint creation; complete cost-share resume.
+
+10. Next action: push the checkpoint/resume commit, then launch the full preregistered run inside a persistent terminal/session manager. If interrupted, rerun the same command without `--no-resume` to continue from checkpoints.
 
 ---
 

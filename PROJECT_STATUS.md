@@ -291,7 +291,13 @@ Important runtime implication: this is a very large run: three candidates x 8192
 
 7. Decision made on 2026-05-22: use Option 1. Keep P6 and P8 exactly as preregistered, do not revise thresholds, and run the full experiment as filed. If P6/P8 fail in the full run, report those failures transparently as null-control diagnostic findings and discuss what they reveal about the Data5 truth process and/or the operational definitions. The primary asset-value concentration claim remains anchored in the preregistered P1-P5 tests, but P6/P8 remain part of the reported preregistered result set.
 
-8. Next action: after pushing this tracker/doc decision commit, prepare for the full preregistered run or, if desired, first run one more timing benchmark to estimate full runtime.
+8. Timing benchmarks completed on 2026-05-22:
+
+   - Candidate A Sobol benchmark, `N=8`, `runs-per-sample=5`, `days=365`, `workers=8`, completed successfully under `outputs/synthetic_ground_truth_timing_benchmark/`. Rough wall time was about 3.5 minutes for 64 parameter sets and 320 full-horizon MC iterations.
+   - Candidate A Sobol benchmark, same settings with `workers=24`, completed under `outputs/synthetic_ground_truth_timing_benchmark_24w/`. Measured wall time was `real 119.79` seconds, `user 2472.48`, `sys 0.36`.
+   - Full preregistered Sobol scale is 3 candidates x 8192 parameter sets x 200 MC iterations = 4,915,200 full-horizon MC iterations. Linear scaling from the 24-worker benchmark suggests roughly 18-21 days of local wall-clock runtime.
+
+9. Next action: before launching the full experiment, add checkpoint/resume support or run candidates/chunks under a job supervisor. A single non-checkpointed 2-3 week local process is too fragile.
 
 ---
 

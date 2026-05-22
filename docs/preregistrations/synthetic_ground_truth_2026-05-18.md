@@ -95,6 +95,8 @@ The framework discriminates correctly if the pattern of passes and fails across 
 
 Sobol first-order (S_1) and total-order (S_T) indices are computed using the Saltelli sampling scheme with N = 1024 base samples, yielding (2k + 2) × N = 8,192 model evaluations per output, where k = 3 is the number of varied parameters. Each model evaluation is averaged over 200 Monte Carlo iterations of the underlying simulation. Total simulation count per candidate model is approximately 1,638,400.
 
+Pre-run implementation clarification: the Saltelli design is generated with second-order sampling enabled because this is the SALib option that yields the pre-registered `(2k + 2) × N` sample count. The reported sensitivity statistics remain first-order and total-order indices.
+
 Sobol indices are computed separately for two outputs:
 - Total data loss across the simulation period
 - Total repair cost across the simulation period
@@ -103,13 +105,15 @@ Confidence intervals on Sobol indices are computed by bootstrap resampling of th
 
 ### Realized-cost-share computation
 
-For each Monte Carlo iteration of Candidate A run at default parameters, the following statistics are computed and aggregated across iterations:
+For 1,000 Monte Carlo iterations of Candidate A run at default parameters, the following statistics are computed and aggregated across iterations:
 
 - Total data loss attributed to each asset class (server, PC, mobile)
 - Total compromise-period count for each asset class
 - Total repair events for each asset class
 
 Statistics are reported as means with 95% bootstrap confidence intervals.
+
+Pre-run implementation clarification: P8 is computed as a period-level device-pair statistic. The within-VLAN co-compromise rate equals infected device-pair periods among pairs sharing at least one VLAN divided by possible same-VLAN device-pair periods. The across-VLAN rate uses pairs with no shared VLAN. The lateral-clustering statistic is `within_rate / across_rate`.
 
 ### Pattern detection
 
@@ -147,6 +151,8 @@ This document is committed to the project repository at the following location p
 The commit timestamp is the canonical evidence that predictions were specified ex-ante. Any modifications to this document after the commit are tracked via git history and disclosed in the manuscript.
 
 Pre-experiment clarification: before any Candidate A/B1/B3 Sobol or smoke-test results were generated, the Data5 configuration file was inspected and the B1 parenthetical mean was corrected from the planning estimate to the verified value above. The operational candidate definition remains unchanged: uniform replacement across devices with nonzero `Data_Value`.
+
+Pre-run implementation clarification added on 2026-05-22: before full experimental execution, the runner's Saltelli sample count, realized-cost-share iteration count, and P8 within/across-VLAN co-compromise operationalization were recorded here to remove ambiguity between the pre-registered threshold and executable analysis code.
 
 ---
 

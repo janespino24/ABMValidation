@@ -1,6 +1,6 @@
 # VIVAMACS Offline Project Status
 
-**Last updated:** 2026-05-18 10:45 Asia/Manila  
+**Last updated:** 2026-05-22 Asia/Manila  
 **Project path:** `/fast/users/kobe/Projects/VIVAMACS`  
 **Repo remote:** `https://github.com/janespino24/ABMValidation.git`  
 **Active workstream:** Paper 1, SIMPAT submission, methodology-only validation paper  
@@ -254,11 +254,32 @@ Important runtime implication: this is a very large run: three candidates x 8192
 
 3. Review the new Sobol/cost-share runner against the preregistration:
 
-   - Confirm whether `calc_second_order=True` should remain, because it matches the preregistered 8192 evaluations at N=1024.
-   - Confirm whether cost-share P8's within/across VLAN co-compromise ratio is acceptable as the operational definition of lateral clustering.
-   - Confirm whether cost-share runs should be 1000 or tied to another manuscript value.
+   Completed on 2026-05-22:
 
-4. Launch a small dry run of Sobol after review, then the long-running experiment.
+   - `calc_second_order=True` remains because it is the SALib setting that implements the preregistered `(2k + 2) * N = 8192` Saltelli sample count at N=1024. The manuscript still reports S1/ST, not second-order indices.
+   - P8 is operationalized as a period-level within/across VLAN co-compromise ratio: infected pair-periods divided by possible pair-periods for pairs that share at least one VLAN versus pairs that share none.
+   - Realized-cost-share analysis is set to 1000 Candidate A Monte Carlo iterations at default parameters.
+
+4. Push pending local commits before running full experiments:
+
+   ```bash
+   cd /fast/users/kobe/Projects/VIVAMACS
+   git push origin main
+   ```
+
+5. After push, run a small Sobol dry run before the full preregistered experiment:
+
+   ```bash
+   .venv/bin/python scripts/synthetic_ground_truth_runner.py \
+     --mode sobol \
+     --candidate A \
+     --n-base 8 \
+     --runs-per-sample 2 \
+     --days 1 \
+     --workers 2 \
+     --bootstrap-resamples 10 \
+     --output-dir outputs/synthetic_ground_truth_dryrun
+   ```
 
 ---
 

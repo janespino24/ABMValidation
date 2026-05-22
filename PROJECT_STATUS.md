@@ -283,7 +283,13 @@ Important runtime implication: this is a very large run: three candidates x 8192
 
    Result: completed 64 Candidate A Sobol dry-run evaluations and wrote metadata, parameter samples, raw outputs, and Sobol CSV files under `outputs/synthetic_ground_truth_dryrun/sobol/A/`. These are pipeline-check artifacts only and are not paper results. SALib emitted a deprecation warning for `salib.sample.saltelli`; this does not affect the dry run, but the runner should eventually migrate to `salib.sample.sobol`.
 
-6. Next action: run a medium dry run across all candidates, then decide whether to launch the full preregistered experiment.
+6. Medium dry runs completed on 2026-05-22:
+
+   - Sobol medium dry run across A/B1/B3 completed with `N=16`, `runs-per-sample=5`, `days=7`, `workers=4`, and wrote expected outputs under `outputs/synthetic_ground_truth_medium_dryrun/sobol/`.
+   - Candidate A cost-share medium dry run completed with 25 iterations at 7 days and wrote expected outputs under `outputs/synthetic_ground_truth_medium_dryrun/cost_share/`.
+   - Candidate A 365-day horizon check completed with 25 cost-share iterations under `outputs/synthetic_ground_truth_costshare_horizon_check/cost_share/`. P5-style server data-loss concentration appears strong (`data_share_Server` mean about 0.9986), but P6 and P8 are flagged: `compromise_event_share_Server` mean about 0.783 and `lateral_clustering_ratio` mean about 0.791. These are dry-run diagnostics, not paper results, but they indicate the preregistered P6/P8 null-control expectations may be misspecified.
+
+7. Next action: do not launch the full preregistered experiment until deciding how to handle the P6/P8 diagnostic warning. The cleanest options are to run the full experiment and report P6/P8 failures transparently, or preserve P1-P5 as primary discrimination tests and treat P6/P8 as exploratory/diagnostic controls in the manuscript discussion.
 
 ---
 

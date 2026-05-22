@@ -304,7 +304,16 @@ Important runtime implication: this is a very large run: three candidates x 8192
    - Added `--no-resume` to intentionally ignore existing checkpoints and recompute in the selected output directory.
    - Verification completed: `py_compile`; tiny Sobol checkpoint creation; complete Sobol resume; partial Sobol resume after trimming checkpoint to 5/16 rows; tiny cost-share checkpoint creation; complete cost-share resume.
 
-10. Next action: push the checkpoint/resume commit, then launch the full preregistered run inside a persistent terminal/session manager. If interrupted, rerun the same command without `--no-resume` to continue from checkpoints.
+10. Full preregistered run launched on 2026-05-22 at 10:02:21 Asia/Manila:
+
+   - Detached tmux session: `vivamacs_full_run`
+   - Log file: `logs/synthetic_ground_truth_full_run.log`
+   - Command: `scripts/synthetic_ground_truth_runner.py --mode all --candidate all --n-base 1024 --runs-per-sample 200 --cost-share-runs 1000 --days 365 --workers 24 --seed 20260518 --output-dir outputs/synthetic_ground_truth`
+   - Initial state: smoke checks completed, Candidate A Sobol started with resume state `0/8192 completed; 8192 pending`.
+   - To monitor: `tmux attach -t vivamacs_full_run` or `tail -f logs/synthetic_ground_truth_full_run.log`.
+   - If interrupted: rerun the same command without `--no-resume`; completed Sobol parameter sets and cost-share iterations will be skipped from checkpoints.
+
+11. Next action: monitor Candidate A progress and periodically verify checkpoint growth under `outputs/synthetic_ground_truth/sobol/A/sobol_checkpoint.csv`.
 
 ---
 

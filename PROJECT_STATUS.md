@@ -313,15 +313,16 @@ Important runtime implication: this is a very large run: three candidates x 8192
    - To monitor: `tmux attach -t vivamacs_full_run` or `tail -f logs/synthetic_ground_truth_full_run.log`.
    - If interrupted: rerun the same command without `--no-resume`; completed Sobol parameter sets and cost-share iterations will be skipped from checkpoints.
 
-11. Telegram hourly monitoring helper added on 2026-05-22:
+11. Telegram hourly monitoring activated on 2026-05-22 at 10:10 Asia/Manila:
 
    - Script: `scripts/telegram_run_monitor.py`
-   - Reads Telegram credentials from `.env/telegram_monitor.env` or environment variables `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`.
+   - Credentials: copied locally from the existing `gmail_monitor` Telegram configuration into ignored file `.env/telegram_monitor.env` with mode 600. Secrets are not committed.
+   - Detached tmux session: `vivamacs_telegram_monitor`
+   - Monitor log: `logs/telegram_run_monitor.log`
    - Status source: `outputs/synthetic_ground_truth/` checkpoints plus `logs/synthetic_ground_truth_full_run.log`.
-   - Dry-run verification completed with `.venv/bin/python scripts/telegram_run_monitor.py --once --dry-run`; it correctly detected tmux session `vivamacs_full_run` as running.
-   - To start hourly notifications after credentials are configured: `tmux new-session -d -s vivamacs_telegram_monitor -c /fast/users/kobe/Projects/VIVAMACS ".venv/bin/python scripts/telegram_run_monitor.py >> logs/telegram_run_monitor.log 2>&1"`.
+   - Verification completed: dry-run status format check, one-time live Telegram test, and detached monitor startup. First live hourly-loop update sent at `2026-05-22T10:10:08`.
 
-12. Next action: configure Telegram credentials in `.env/telegram_monitor.env`, send a one-time test message, then start the detached hourly monitor.
+12. Next action: monitor Telegram hourly updates and periodically check `tmux list-sessions` to verify both `vivamacs_full_run` and `vivamacs_telegram_monitor` remain active.
 
 ---
 
